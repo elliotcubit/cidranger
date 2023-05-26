@@ -79,7 +79,12 @@ func TestPrefixTrieInsert(t *testing.T) {
 				assert.NoError(t, err)
 			}
 
-			assert.Equal(t, len(tc.expectedNetworksInDepthOrder), trie.Len(), "trie size should match")
+			assert.Equal(
+				t,
+				len(tc.expectedNetworksInDepthOrder),
+				trie.Len(),
+				"trie size should match",
+			)
 
 			allNetworks, err := trie.CoveredNetworks(*getAllByVersion(tc.version))
 			assert.Nil(t, err)
@@ -213,7 +218,12 @@ func TestPrefixTrieRemove(t *testing.T) {
 				}
 			}
 
-			assert.Equal(t, len(tc.expectedNetworksInDepthOrder), trie.Len(), "trie size should match after revmoval")
+			assert.Equal(
+				t,
+				len(tc.expectedNetworksInDepthOrder),
+				trie.Len(),
+				"trie size should match after revmoval",
+			)
 
 			allNetworks, err := trie.CoveredNetworks(*getAllByVersion(tc.version))
 			assert.Nil(t, err)
@@ -686,7 +696,11 @@ func TestTrieMemUsage(t *testing.T) {
 
 	// Assert that heap allocation from first loop is within set threshold of avg over all runs.
 	assert.Less(t, uint64(0), baseLineHeap)
-	assert.LessOrEqual(t, float64(baseLineHeap), float64(totalHeapAllocOverRuns/uint64(runs))*thresh)
+	assert.LessOrEqual(
+		t,
+		float64(baseLineHeap),
+		float64(totalHeapAllocOverRuns/uint64(runs))*thresh,
+	)
 }
 
 func GenLeafIPNet(ip net.IP) net.IPNet {

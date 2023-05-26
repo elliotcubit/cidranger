@@ -271,8 +271,13 @@ func getRollupEntries(trie *prefixTrie, f RollupApply) []RangerEntry {
 		// If both have an entry, check to rollup
 		if node.children[0].hasEntry() && node.children[1].hasEntry() {
 			if f.CanRollup(node.children[0].entry, node.children[1].entry) {
-				rollupEntries = append(rollupEntries,
-					f.GetParentEntry(node.children[0].entry, node.children[1].entry, node.network.IPNet),
+				rollupEntries = append(
+					rollupEntries,
+					f.GetParentEntry(
+						node.children[0].entry,
+						node.children[1].entry,
+						node.network.IPNet,
+					),
 				)
 			}
 			continue

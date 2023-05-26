@@ -129,7 +129,13 @@ func TestSubnets(t *testing.T) {
 		name     string
 	}{
 		{"0.0.0.0/8", 33, nil, rnet.ErrBadMaskLength, "IPv4 prefix too long"},
-		{"0.0.0.0/0", 2, []string{"0.0.0.0/2", "64.0.0.0/2", "128.0.0.0/2", "192.0.0.0/2"}, nil, "IPv4 /0 to /2"},
+		{
+			"0.0.0.0/0",
+			2,
+			[]string{"0.0.0.0/2", "64.0.0.0/2", "128.0.0.0/2", "192.0.0.0/2"},
+			nil,
+			"IPv4 /0 to /2",
+		},
 		{"10.0.0.0/8", 0, []string{"10.0.0.0/9", "10.128.0.0/9"}, nil, "IPv4 default split /8"},
 		{"::/2", 4, []string{"::/4", "1000::/4", "2000::/4", "3000::/4"}, nil, "IPv6 /2 to /4"},
 		{"10.0.0.0/15", 15, []string{"10.0.0.0/15"}, nil, "IPv4 prefix self"},
@@ -165,7 +171,12 @@ func TestBredthRangerIter(t *testing.T) {
 	}{
 		{rnet.IPv4, []string{}, []string{}, "empty"},
 		{rnet.IPv4, []string{"1.2.3.4/15"}, []string{"1.2.3.4/15"}, "single v4"},
-		{rnet.IPv4, []string{"255.0.0.0/8", "0.0.0.0/8"}, []string{"0.0.0.0/8", "255.0.0.0/8"}, "ordering v4"},
+		{
+			rnet.IPv4,
+			[]string{"255.0.0.0/8", "0.0.0.0/8"},
+			[]string{"0.0.0.0/8", "255.0.0.0/8"},
+			"ordering v4",
+		},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
@@ -218,7 +229,11 @@ func (rc rollupCount) CanRollup(c0 RangerEntry, c1 RangerEntry) bool {
 	return rc0.Records+rc1.Records < rc.rollupThreshold
 }
 
-func (rc rollupCount) GetParentEntry(c0 RangerEntry, c1 RangerEntry, parentNet net.IPNet) RangerEntry {
+func (rc rollupCount) GetParentEntry(
+	c0 RangerEntry,
+	c1 RangerEntry,
+	parentNet net.IPNet,
+) RangerEntry {
 	rc0, ok := c0.(RecordEntry)
 	if !ok {
 		panic(c0)
@@ -332,10 +347,18 @@ func BenchmarkBruteRangerHitContainingNetworksIPv4UsingAWSRanges(b *testing.B) {
 }
 
 func BenchmarkPCTrieHitContainingNetworksIPv6UsingAWSRanges(b *testing.B) {
-	benchmarkContainingNetworksUsingAWSRanges(b, net.ParseIP("2620:107:300f::36b7:ff81"), NewPCTrieRanger())
+	benchmarkContainingNetworksUsingAWSRanges(
+		b,
+		net.ParseIP("2620:107:300f::36b7:ff81"),
+		NewPCTrieRanger(),
+	)
 }
 func BenchmarkBruteRangerHitContainingNetworksIPv6UsingAWSRanges(b *testing.B) {
-	benchmarkContainingNetworksUsingAWSRanges(b, net.ParseIP("2620:107:300f::36b7:ff81"), newBruteRanger())
+	benchmarkContainingNetworksUsingAWSRanges(
+		b,
+		net.ParseIP("2620:107:300f::36b7:ff81"),
+		newBruteRanger(),
+	)
 }
 
 func BenchmarkPCTrieMissContainingNetworksIPv4UsingAWSRanges(b *testing.B) {
