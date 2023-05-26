@@ -168,6 +168,58 @@ type rangerIter struct {
 	method  TraversalMethod
 }
 
+type versionedRangerIter struct {
+	v4     RangerIter
+	v4Done bool
+	v6     RangerIter
+}
+
+func NewVersionedIter(r Ranger, shallow bool, method TraversalMethod) *versionedRangerIter {
+	root, ok := r.(*versionedRanger)
+	if !ok {
+		panic(fmt.Errorf("Invalid type for versionedRangerIter"))
+	}
+	iter := versionedRangerIter{
+		v4: NewIter(root.ipV4Ranger, shallow, method),
+		v6: NewIter(root.ipV6Ranger, shallow, method),
+	}
+	return &iter
+}
+
+func (i *versionedRangerIter) Next() bool {
+	if i.v4.Next() {
+		return true
+	}
+
+	i.v4Done = true
+	if i.v6.Next() {
+		return true
+	}
+
+	return false
+}
+
+func (i *versionedRangerIter) Get() RangerEntry {
+	if i.v4Done {
+		return i.v6.Get()
+	}
+	return i.v4.Get()
+}
+
+func (i *versionedRangerIter) Error() error {
+	if err := i.v4.Error(); err != nil {
+		return err
+	}
+	return i.v6.Error()
+}
+
+func (i *versionedRangerIter) GetPath() []RangerEntry {
+	if i.v4Done {
+		return i.v6.GetPath()
+	}
+	return i.v4.GetPath()
+}
+
 // A bredth-first iterator that returns all netblocks with a RangerEntry
 func NewBredthIter(r Ranger) *rangerIter {
 	return NewIter(r, false, TraversalMethodBreadth)
@@ -177,10 +229,11 @@ func NewBredthIter(r Ranger) *rangerIter {
 func NewShallowBredthIter(r Ranger) *rangerIter {
 	return NewIter(r, true, TraversalMethodBreadth)
 }
+
 func NewIter(r Ranger, shallow bool, method TraversalMethod) *rangerIter {
 	root, ok := r.(*prefixTrie)
 	if !ok {
-		panic(fmt.Errorf("Invalid type for bredthRangerIter"))
+		panic(fmt.Errorf("Invalid type for rangerIter"))
 	}
 	iter := rangerIter{
 		node:    root,
