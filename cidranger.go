@@ -150,6 +150,7 @@ func Subnets(base net.IPNet, prefixlen int) (subnets []net.IPNet, err error) {
 type RangerIter interface {
 	Next() bool
 	Get() RangerEntry
+	GetPath() []RangerEntry
 	Error() error
 }
 
@@ -204,6 +205,16 @@ func (i *bredthRangerIter) Next() bool {
 
 func (i *bredthRangerIter) Get() RangerEntry {
 	return i.node.entry
+}
+
+func (i *bredthRangerIter) GetPath() []RangerEntry {
+	retv := make([]RangerEntry, 0)
+	for this := i.node; this.parent != nil; this = this.parent {
+		if this.hasEntry() {
+			retv = append(retv, this.entry)
+		}
+	}
+	return retv
 }
 
 func (i *bredthRangerIter) Error() error {
