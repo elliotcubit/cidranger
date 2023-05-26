@@ -142,7 +142,7 @@ func Subnets(base net.IPNet, prefixlen int) (subnets []net.IPNet, err error) {
 }
 
 // RangerIter is an interface to use with an iterator-like pattern
-// ri := NewBredthIter(ptrie)
+// ri := NewBreadthIter(ptrie)
 // for ri.Next() {
 //     entry := ri.Get()
 //     ...
@@ -220,13 +220,13 @@ func (i *versionedRangerIter) GetPath() []RangerEntry {
 	return i.v4.GetPath()
 }
 
-// A bredth-first iterator that returns all netblocks with a RangerEntry
-func NewBredthIter(r Ranger) *rangerIter {
+// A breadth-first iterator that returns all netblocks with a RangerEntry
+func NewBreadthIter(r Ranger) *rangerIter {
 	return NewIter(r, false, TraversalMethodBreadth)
 }
 
-// A bredth-first iterator that will return only the largest netblocks with an entry
-func NewShallowBredthIter(r Ranger) *rangerIter {
+// A breadth-first iterator that will return only the largest netblocks with an entry
+func NewShallowBreadthIter(r Ranger) *rangerIter {
 	return NewIter(r, true, TraversalMethodBreadth)
 }
 

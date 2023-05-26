@@ -162,7 +162,7 @@ func TestSubnets(t *testing.T) {
 	}
 }
 
-func TestBredthRangerIter(t *testing.T) {
+func TestBreadthRangerIter(t *testing.T) {
 	cases := []struct {
 		version  rnet.IPVersion
 		inserts  []string
@@ -192,7 +192,7 @@ func TestBredthRangerIter(t *testing.T) {
 				expectedEntries = append(expectedEntries, (*network))
 			}
 			var resultEntries []net.IPNet
-			iter := NewBredthIter(trie.(*prefixTrie))
+			iter := NewBreadthIter(trie.(*prefixTrie))
 			for iter.Next() {
 				entry := iter.Get()
 				resultEntries = append(resultEntries, entry.Network())
@@ -350,7 +350,7 @@ func TestRollupApply(t *testing.T) {
 				assert.Errorf(t, err, "Expected error: %v", tc.err)
 			}
 			if tc.err == nil && err == nil {
-				iter := NewShallowBredthIter(trie.(*prefixTrie))
+				iter := NewShallowBreadthIter(trie.(*prefixTrie))
 				for iter.Next() {
 					entry := iter.Get()
 					resultEntries = append(resultEntries, entry.(RecordEntry))
