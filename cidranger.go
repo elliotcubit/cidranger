@@ -59,6 +59,13 @@ var AllIPv4 = parseCIDRUnsafe("0.0.0.0/0")
 // AllIPv6 is a IPv6 CIDR that contains all networks
 var AllIPv6 = parseCIDRUnsafe("0::0/0")
 
+type TraversalMethod int
+
+const (
+	TraversalMethodBreadth = iota
+	TraversalMethodDepth   = iota
+)
+
 func parseCIDRUnsafe(s string) *net.IPNet {
 	_, cidr, _ := net.ParseCIDR(s)
 	return cidr
@@ -154,36 +161,38 @@ type RangerIter interface {
 	Error() error
 }
 
-type bredthRangerIter struct {
+type rangerIter struct {
 	path    *list.List
 	node    *prefixTrie
 	shallow bool
+	method  TraversalMethod
 }
 
 // A bredth-first iterator that returns all netblocks with a RangerEntry
-func NewBredthIter(r Ranger) bredthRangerIter {
-	return newBredthIter(r, false)
+func NewBredthIter(r Ranger) *rangerIter {
+	return NewIter(r, false, TraversalMethodBreadth)
 }
 
 // A bredth-first iterator that will return only the largest netblocks with an entry
-func NewShallowBredthIter(r Ranger) bredthRangerIter {
-	return newBredthIter(r, true)
+func NewShallowBredthIter(r Ranger) *rangerIter {
+	return NewIter(r, true, TraversalMethodBreadth)
 }
-func newBredthIter(r Ranger, shallow bool) bredthRangerIter {
+func NewIter(r Ranger, shallow bool, method TraversalMethod) *rangerIter {
 	root, ok := r.(*prefixTrie)
 	if !ok {
 		panic(fmt.Errorf("Invalid type for bredthRangerIter"))
 	}
-	iter := bredthRangerIter{
+	iter := rangerIter{
 		node:    root,
 		path:    list.New(),
 		shallow: shallow,
+		method:  method,
 	}
 	iter.path.PushBack(root)
-	return iter
+	return &iter
 }
 
-func (i *bredthRangerIter) Next() bool {
+func (i *rangerIter) Next() bool {
 	for i.path.Len() > 0 {
 		element := i.path.Front()
 		i.path.Remove(element)
@@ -193,7 +202,14 @@ func (i *bredthRangerIter) Next() bool {
 		}
 		for _, child := range i.node.children {
 			if child != nil {
-				i.path.PushBack(child)
+				switch i.method {
+				case TraversalMethodBreadth:
+					i.path.PushBack(child)
+				case TraversalMethodDepth:
+					i.path.PushFront(child)
+				default:
+					panic(fmt.Sprintf("Unrecognized TraversalMethod %v", i.method))
+				}
 			}
 		}
 		if i.node.hasEntry() {
@@ -203,11 +219,11 @@ func (i *bredthRangerIter) Next() bool {
 	return false
 }
 
-func (i *bredthRangerIter) Get() RangerEntry {
+func (i *rangerIter) Get() RangerEntry {
 	return i.node.entry
 }
 
-func (i *bredthRangerIter) GetPath() []RangerEntry {
+func (i *rangerIter) GetPath() []RangerEntry {
 	retv := make([]RangerEntry, 0)
 	for this := i.node; this.parent != nil; this = this.parent {
 		if this.hasEntry() {
@@ -217,7 +233,7 @@ func (i *bredthRangerIter) GetPath() []RangerEntry {
 	return retv
 }
 
-func (i *bredthRangerIter) Error() error {
+func (i *rangerIter) Error() error {
 	return nil
 }
 

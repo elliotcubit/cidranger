@@ -202,6 +202,62 @@ func TestBredthRangerIter(t *testing.T) {
 	}
 }
 
+func TestDepthRangerIter(t *testing.T) {
+	cases := []struct {
+		version  rnet.IPVersion
+		inserts  []string
+		expected []string
+		name     string
+	}{
+		{rnet.IPv4, []string{}, []string{}, "empty"},
+		{rnet.IPv4, []string{"1.2.3.4/15"}, []string{"1.2.3.4/15"}, "single v4"},
+		{
+			rnet.IPv4,
+			[]string{
+				"255.255.0.0/16",
+				"8.0.0.0/8",
+				"255.255.254.0/24",
+				"255.255.253.128/25",
+				"255.254.0.0/16",
+				"255.255.255.0/24",
+				"255.0.0.0/8",
+			},
+			[]string{
+				"255.0.0.0/8",
+				"255.255.0.0/16",
+				"255.255.255.0/24",
+				"255.255.254.0/24",
+				"255.255.253.128/25",
+				"255.254.0.0/16",
+				"8.0.0.0/8",
+			},
+			"nest, out-of-order inserts",
+		},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			trie := newPrefixTree(tc.version)
+			for _, insert := range tc.inserts {
+				_, network, _ := net.ParseCIDR(insert)
+				err := trie.Insert(NewBasicRangerEntry(*network))
+				assert.NoError(t, err)
+			}
+			var expectedEntries []net.IPNet
+			for _, expected := range tc.expected {
+				_, network, _ := net.ParseCIDR(expected)
+				expectedEntries = append(expectedEntries, (*network))
+			}
+			var resultEntries []net.IPNet
+			iter := NewIter(trie.(*prefixTrie), false, TraversalMethodDepth)
+			for iter.Next() {
+				entry := iter.Get()
+				resultEntries = append(resultEntries, entry.Network())
+			}
+			assert.Equal(t, expectedEntries, resultEntries)
+		})
+	}
+}
+
 // basic impl for a rollup based on weighted counts
 type RecordEntry struct {
 	net.IPNet
